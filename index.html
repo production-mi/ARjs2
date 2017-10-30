@@ -414,6 +414,13 @@
         }
       }
 
+      var marker1 = new THREE.Group();
+      var arcontrols = new THREEx.ArMarkerControls(context, marker1, {
+        type: "pattern",
+        patternUrl: "Marker.patt",
+      });
+      scene.add(marker1);
+
 　　　//////////////ここまでARキットの部分
 
       var customShader = new THREE.ShaderMaterial({
