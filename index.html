@@ -416,6 +416,10 @@
                 },
             },
         });
+        function maxLodLevel(width, height) {
+          return Math.log2(Math.max(width,height));
+        }
+
         let cubeLoader = new THREE.CubeTextureLoader();
         let cubeMap = cubeLoader.load( envimgPaths, function(loadedCubeMap){
               loadedCubeMap.generateMipmaps = true;
@@ -440,35 +444,27 @@
           skyBoxMaterial);
         //scene.add(skyMesh);
 
+
+      var raycaster = new THREE.Raycaster();
+      var mouse = new THREE.Vector2();
+
       //マウスが押された時
       window.onmousedown = window.ontouchstart = function (e) {
         if (e.target !== renderer.domElement) {
           return;
         }
 
-        let rect = e.target.getBoundingClientRect();
+        // イベントの伝播の無効化
+        e.preventDefault();
 
-        // スクリーン上のマウス位置を取得する
-        let mouseX = (e.clientX || e.touches[0].clientX) - rect.left;
-        let mouseY = (e.clientY || e.touches[0].clientY) - rect.top;
+        // マウスポインタの位置座標の取得
+        mouse.x = ((e.clientX || e.touches[0].clientX) / window.innerWidth) * 2 - 1;
+        mouse.y = -((e.clientY || e.touches[0].clientY) / window.innerHeight) * 2 + 1;
 
-        // 取得したスクリーン座標を-1〜1に正規化する（WebGLは-1〜1で座標が表現される）
-        mouseX = (mouseX / window.innerWidth) * 2 - 1;
-        mouseY = -(mouseY / window.innerHeight) * 2 + 1;
-
-        // マウスの位置ベクトル
-        let pos = new THREE.Vector3(mouseX, mouseY, 1);
-
-        // pos はスクリーン座標系なので、オブジェクトの座標系に変換
-        // オブジェクト座標系は今表示しているカメラからの視点なので、引数にカメラオブジェクトを渡す
-        pos.unproject(camera);
-
-        // 始点、向きベクトルを渡してレイを作成
-        let ray = new THREE.Raycaster(camera.position, pos.sub(camera.position).normalize());
-
-        // 交差判定
-        // 引数は取得対象となるMeshの配列を渡す。以下はシーン内のすべてのオブジェクトを対象に。
-        let objs = ray.intersectObjects(meshes);
+        // 光線を発射
+        raycaster.setFromCamera(mouse, camera);
+        // 光線と交わるオブジェクトを収集
+        var objs = raycaster.intersectObjects(meshes);
 
         // ヒエラルキーを持った子要素も対象とする場合は第二引数にtrueを指定する
         // let objs = ray.intersectObjects(meshes, true);
