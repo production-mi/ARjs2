@@ -264,7 +264,7 @@
       // let clock = new THREE.Clock();
 
       // Make camera
-      let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+      let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000000);
       camera.position.x = 70;
       camera.position.y = 100;
       camera.position.z = 90;
@@ -361,7 +361,7 @@
 
 
 
-      scene.add(ground);
+      //scene.add(ground);
       rootGroup.position.set(0,0,0);
       rootGroup.position.set(-17.9,0,-17.9);
       pivot.add(rootGroup);
@@ -454,17 +454,25 @@
         cubeShader.uniforms['tCube'].value = cubeMap;
         cubeShader.uniforms['tFlip'].value = 1;
 
+        let testMat = new THREE.MeshLambertMaterial({
+          vertexColors:THREE.FaceColors,
+          opacity: 0.0
+        });
+
         var skyBoxMaterial = new THREE.ShaderMaterial({
             fragmentShader: cubeShader.fragmentShader,
             vertexShader : cubeShader.vertexShader,
             uniforms: cubeShader.uniforms,
             depthWrite: false,
-            side: THREE.BackSide
+            side: THREE.BackSide,
+            opacity:0.0
         });
+
+
 
         var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1),
           skyBoxMaterial);
-        //scene.add(skyMesh);
+        scene.add(skyMesh);
 
 
       var raycaster = new THREE.Raycaster();
