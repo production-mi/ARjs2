@@ -1,0 +1,502 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,minimum-scale=1,maximum-scale=1">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="ar.min.js"></script>
+<script src="Tween.js"></script>
+<script src="color-tween.js"></script>
+<script id="vs" type="vshader">
+    varying vec3 wNormal;
+    varying vec4 wPosition;
+    void main(void) {
+        wNormal = (modelMatrix * vec4(normal,0.0)).xyz;
+        wPosition = modelMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+    }
+</script>
+<script id="fs" type="fshader">
+    #extension GL_EXT_shader_texture_lod : enable
+    varying vec3 wNormal;
+    varying vec4 wPosition;
+    uniform float Roughness;
+    uniform float Metallic;
+    uniform vec3 BaseColor;
+    uniform float MaxLodLevel;
+    uniform samplerCube CubeMap;
+    vec3 schlick(vec3 f0, float product)
+    {
+        return f0 + (1.0 - f0) * pow((1.0 - product), 5.0);
+    }
+    void main(void)
+    {
+        vec3 N = normalize(wNormal);
+        vec3 V = normalize((vec4(cameraPosition, 1.0) - wPosition).xyz);
+        vec3 R = reflect(-V,N);
+        // IBL
+        vec3 diffuse = textureCubeLodEXT(CubeMap, N, MaxLodLevel).xyz;
+        vec3 specular = textureCubeLodEXT(CubeMap, R, log2(Roughness*pow(2.0, MaxLodLevel))).xyz;
+        // フレネル
+        vec3 F0 = mix(vec3(0.1), BaseColor, Metallic);
+        vec3 fresnel = schlick(F0, max(0.0, dot(N,V)));
+        vec3 color = BaseColor * (1.0 - Metallic) * diffuse * (1.0 - fresnel) + specular * fresnel;
+        gl_FragColor = vec4(color,1.0);
+    }
+</script>
+<script>
+  (function(){
+    const MAX_ANIMATION_MS = 1500; // millisecond
+
+    // ピクセル（キューブ）数
+    const WIDTH = 30;
+    const HEIGHT = 30;
+
+    // キューブの大きさ
+    const CUBE_WIDTH = 1;
+    const CUBE_HEIGHT = 1;
+    const CUBE_DEPTH = 1;
+
+    /** @const キューブの離れ具合 */
+    const CUBE_INTERVAL = 1.2;
+
+    /** @const キューブ同士の一番遠い距離 */
+    const MAX_DISTANCE = calcDistance3d(
+      {x: 0, y: 0, z: 0},
+      {x: CUBE_INTERVAL * (WIDTH - 1) + CUBE_DEPTH, y: CUBE_INTERVAL * (HEIGHT - 1) + CUBE_WIDTH, z: 0}
+    );
+
+    let envimgPaths = [
+        "Cubemaps/face_r.png",
+        "Cubemaps/face_l.png",
+        "Cubemaps/face_t.png",
+        "Cubemaps/face_d.png",
+        "Cubemaps/face_f.png",
+        "Cubemaps/face_b.png"
+    ];
+
+
+    /**
+     * 3D空間における二点間の距離を求めます
+     *
+     * @param a position
+     * @param b position
+     * @returns {number}
+     */
+    function calcDistance3d(a, b) {
+      return Math.sqrt(
+        Math.pow(a.x - b.x, 2)
+        + Math.pow(a.y - b.y, 2)
+        + Math.pow(a.z - b.z, 2)
+      );
+    }
+    // ----- /calcDistance
+
+    /**
+     * generate cycle
+     *
+     * @param arr cycles on an array of values
+     * @returns {Function}
+     */
+    function generateCycle(arr) {
+      let currentIndex = 0;
+      let length = arr.length;
+
+      return (function () {
+        let current = arr[currentIndex % length];
+        ++currentIndex;
+
+        return current;
+      });
+    }
+    // ----- /generateCycle
+
+    /**
+     * 画像ファイルへのパスから、指定されたサイズのピクセル情報を返します。
+     *
+     * @param path
+     * @param destWidth
+     * @param destHeight
+     * @returns {Promise}
+     */
+    function getImagePixelColorsPromise(path, destWidth, destHeight) {
+      // プロミスを返す
+      // https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Promise
+      return new Promise(function (resolve, reject) {
+        let img = new Image();
+
+        img.onerror = function () {
+          // エラーが起きたら
+          reject('画像の読み込みに失敗しました: ' + path);
+        };
+
+        img.onload = function () {
+          // 画像の読み込みが完了したら
+          let pixels = [];
+          let canvas = document.createElement('canvas');
+          let ctx = canvas.getContext('2d');
+
+          canvas.width = destWidth;
+          canvas.height = destHeight;
+
+          // img を destWidth, destHeight に縮小して描画
+          ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, destWidth, destHeight);
+
+          let data = ctx.getImageData(0, 0, destWidth, destWidth).data;
+          for (let i = 0; i < data.length; i += 4) {
+            pixels.push({
+              r: data[i] / 255,
+              g: data[i + 1] / 255,
+              b: data[i + 2] / 255,
+              a: data[i + 3] / 255
+            });
+          }
+
+          resolve(pixels); // 返り値として pixels 配列を渡し、Promise を成功させる
+        };
+
+        img.src = path; // 画像を読み込む
+      });
+    }
+    // ----- /getImagePixelColorsPromise
+
+    /**
+     * メッシュアニメーションの登録
+     * TweenJS で animation https://github.com/tweenjs/tween.js
+     *
+     * @param meshes array of mesh
+     * @param targetMesh object
+     * @param pixels array of pixel data
+     */
+    function registerMeshAnimation(meshes, targetMesh, pixels) {
+      let durationEasingFunc = TWEEN.Easing.Circular.Out;
+
+      meshes.forEach(function(mesh, index) {
+        // それぞれのメッシュについて計算してアニメーションを登録する
+
+        // 2点間の距離を求める
+        let distance = calcDistance3d(targetMesh.position, mesh.position);
+
+        // 距離に応じて開始時間を調整する
+        let easingRate = durationEasingFunc(distance / MAX_DISTANCE);
+
+        // 最大 MAX_ANIMATION_MS ミリ秒でアニメーションが開始するように調整
+        meshAnimate(mesh, easingRate * MAX_ANIMATION_MS, pixels[index]);
+      });
+    }
+    // ----- /registerMeshAnimation
+
+    /**
+     * メッシュに対してアニメーションを設定する
+     *
+     * @param mesh
+     * @param delay
+     * @param color
+     */
+    function meshAnimate(mesh, delay, color) {
+      let scaleTween = new TWEEN.Tween(mesh.scale)
+        .delay(delay)
+        .to({x: 0.5, y: 0.5, z: 0.5}, 300, TWEEN.Easing.Back.In);
+
+      let scaleTween2 = new TWEEN.Tween(mesh.scale)
+        .to({x: 1, y: 1, z: 1}, 300, TWEEN.Easing.Circular.InOut);
+
+      let positionTween = new TWEEN.Tween(mesh.position)
+        .delay(delay)
+        .to({y: 1}, 300, TWEEN.Easing.Back.In);
+
+      let positionTween2 = new TWEEN.Tween(mesh.position)
+        .to({y: -1}, 300, TWEEN.Easing.Circular.InOut);
+
+      let rotationTween = new TWEEN.Tween(mesh.rotation)
+        .delay(delay)
+        .to({x: Math.PI/180*180}, 300, TWEEN.Easing.Circular.In);
+
+      let rotationTween2 = new TWEEN.Tween(mesh.rotation)
+        // .delay(delay)
+        .to({x: Math.PI/180*360}, 300, TWEEN.Easing.Circular.InOut)
+        .onComplete(function() {
+          mesh.rotation.x = 0;
+        });
+
+      let colorTween = new TWEEN.Tween(mesh.material.color)
+        .delay(delay)
+        .to(color, 300, TWEEN.Easing.Linear.None);
+
+      scaleTween.chain(scaleTween2);
+      positionTween.chain(positionTween2);
+      rotationTween.chain(rotationTween2);
+      scaleTween.start();
+      positionTween.start();
+      rotationTween.start();
+      colorTween.start();
+    }
+    // ----- /meshAnimate
+
+    // --------------------------------------------------------------------------------------
+    // ここ以下がメインの処理
+    // --------------------------------------------------------------------------------------
+
+    let imagePaths = ['img/image1.jpg', 'img/image2.png', 'img/image3.png', 'img/image4.png'];
+    let imagePromises = imagePaths.map(function (imagePath){
+      return getImagePixelColorsPromise(imagePath, WIDTH, HEIGHT);
+    });
+
+    Promise.all(imagePromises).then(function(images) {
+      // imagePromises が成功した場合
+
+      console.log(images); // imagePaths 分のピクセル配列が返って来る
+
+      // ピクセルデータンの cycle を生成
+      let cyclePixels = generateCycle(images);
+
+      // Make scene
+      let scene = new THREE.Scene();
+
+      // let clock = new THREE.Clock();
+
+      // Make camera
+      let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.x = 70;
+      camera.position.y = 100;
+      camera.position.z = 90;
+
+      let controls = new THREE.OrbitControls(camera);
+
+      // Setting light
+      let SpotLight = new THREE.SpotLight(0xffffff, 0.5);
+      SpotLight.position.set( 20, 100, 20 );
+      SpotLight.castShadow = true;
+
+      SpotLight.shadow.mapSize.width = 2048;
+      SpotLight.shadow.mapSize.height = 2048;
+      SpotLight.shadow.camera.near = 0.5;
+      SpotLight.shadow.camera.far = 4000;
+      SpotLight.shadow.camera.fov = 30;
+
+      scene.add(SpotLight);
+
+      var AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+      scene.add(AmbientLight);
+
+      let light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+      scene.add(light);
+
+      // let loader = new THREE.TextureLoader();
+      // let texture = loader.load('Sprite2.png');
+
+      let geometry = new THREE.CubeGeometry(CUBE_WIDTH, CUBE_HEIGHT, CUBE_DEPTH);
+
+      let meshes = [];
+      let rootGroup = new THREE.Group();
+      let pivot = new THREE.Group();
+      let currentPixels = cyclePixels();
+
+      for (let z = 0; z < WIDTH; z++) {
+        for (let x = 0; x < HEIGHT; x++) {
+          let index = z * WIDTH + x;
+          let mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+            vertexColors:THREE.FaceColors,
+            roughness:0.8,
+            metalness:0
+            // map:texture,
+            // transparent:true
+          }));
+
+          mesh.position.x += CUBE_INTERVAL * x;
+          mesh.position.y = 2;
+          mesh.position.z += CUBE_INTERVAL * z;
+
+          mesh.material.color.r = currentPixels[index].r;
+          mesh.material.color.g = currentPixels[index].g;
+          mesh.material.color.b = currentPixels[index].b;
+
+          mesh.castShadow = true;
+          mesh.castShadow = true;
+          rootGroup.add(mesh);
+          meshes.push(mesh);
+
+
+        }
+      }
+      let groundMesh = new THREE.CubeGeometry(100, 0.1, 100);
+      let groundMaterial = new THREE.MeshLambertMaterial({
+        vertexColors:{r:0.5, g:0.5, b:0.5},
+      });
+      groundMaterial.transparent = true;
+      groundMaterial.blending = THREE["MultiplyBlending"];
+      let ground = new THREE.Mesh(groundMesh, groundMaterial);
+      ground.position.set(0,-10,0);
+      ground.castShadow = false;
+      ground.receiveShadow = true;
+
+      scene.add(ground);
+      scene.add(pivot);
+      scene.add(rootGroup);
+      rootGroup.position.set(0,0,0);
+      rootGroup.position.set(-17.9,0,-17.9);
+      pivot.add(rootGroup);
+
+      let renderer = new THREE.WebGLRenderer({antialias:true});
+      renderer.context.getExtension('EXT_shader_texture_lod');
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.enabled = true;
+      
+      // レンダラーの HTML要素を、画面上に追加
+      document.body.appendChild(renderer.domElement);
+
+      ////////////ここからARキットの部分
+
+      var source = new THREEx.ArToolkitSource({
+        sourceType: "webcam", 
+      });
+      source.init(function onReady() { 
+        onResize();                                         
+      });
+
+      var context = new THREEx.ArToolkitContext({           
+        debug: false,                                       
+        cameraParametersUrl: "camera_para.dat",             
+        detectionMode: "mono",                              
+        imageSmoothingEnabled: true,                        
+        maxDetectionRate: 60,                               
+        canvasWidth: source.parameters.sourceWidth,         
+        canvasHeight: source.parameters.sourceHeight,      
+      });
+      context.init(function onCompleted(){                  
+        camera.projectionMatrix.copy(context.getProjectionMatrix());   
+      });
+
+      window.addEventListener("resize", function() {        
+      onResize();                                         
+      });
+
+      function onResize(){
+      source.onResizeElement();                           
+      source.copyElementSizeTo(renderer.domElement);      
+      if(context.arController !== null){                  
+        source.copyElementSizeTo(context.arController.canvas);  
+        } 
+      }
+
+　　　//////////////ここまでARキットの部分
+
+      var customShader = new THREE.ShaderMaterial({
+            fragmentShader: document.getElementById('fs').innerHTML,
+            vertexShader  : document.getElementById('vs').innerHTML,
+            uniforms: {
+                Roughness: {
+                    type: 'fv1',
+                    value: 0.0,
+                },
+                Metallic: {
+                    type: 'fv1',
+                    value: 0.0,
+                },
+                BaseColor: {
+                    type: 'v3',
+                    value: null,
+                },
+                MaxLodLevel: {
+                    type: 'fv1',
+                    value: 0.0,
+                },
+                CubeMap: {
+                    type: 'tc',
+                    value: null,
+                },
+            },
+        });
+        let cubeLoader = new THREE.CubeTextureLoader();
+        let cubeMap = cubeLoader.load( envimgPaths, function(loadedCubeMap){
+              loadedCubeMap.generateMipmaps = true;
+              loadedCubeMap.needsUpdate = true;
+              customShader.uniforms.MaxLodLevel.value = maxLodLevel(loadedCubeMap.image[0].width, loadedCubeMap.image[0].height);
+            customShader.uniforms.CubeMap.value = loadedCubeMap;
+         });
+
+        var cubeShader = THREE.ShaderLib['cube'];
+        cubeShader.uniforms['tCube'].value = cubeMap;
+        cubeShader.uniforms['tFlip'].value = 1;
+
+        var skyBoxMaterial = new THREE.ShaderMaterial({
+            fragmentShader: cubeShader.fragmentShader,
+            vertexShader : cubeShader.vertexShader,
+            uniforms: cubeShader.uniforms,
+            depthWrite: false,
+            side: THREE.BackSide
+        });
+
+        var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1), 
+          skyBoxMaterial);
+        //scene.add(skyMesh);
+
+      //マウスが押された時
+      window.onmousedown = window.ontouchstart = function (e) {
+        if (e.target !== renderer.domElement) {
+          return;
+        }
+
+        let rect = e.target.getBoundingClientRect();
+
+        // スクリーン上のマウス位置を取得する
+        let mouseX = (e.clientX || e.touches[0].clientX) - rect.left;
+        let mouseY = (e.clientY || e.touches[0].clientY) - rect.top;
+
+        // 取得したスクリーン座標を-1〜1に正規化する（WebGLは-1〜1で座標が表現される）
+        mouseX = (mouseX / window.innerWidth) * 2 - 1;
+        mouseY = -(mouseY / window.innerHeight) * 2 + 1;
+
+        // マウスの位置ベクトル
+        let pos = new THREE.Vector3(mouseX, mouseY, 1);
+
+        // pos はスクリーン座標系なので、オブジェクトの座標系に変換
+        // オブジェクト座標系は今表示しているカメラからの視点なので、引数にカメラオブジェクトを渡す
+        pos.unproject(camera);
+
+        // 始点、向きベクトルを渡してレイを作成
+        let ray = new THREE.Raycaster(camera.position, pos.sub(camera.position).normalize());
+
+        // 交差判定
+        // 引数は取得対象となるMeshの配列を渡す。以下はシーン内のすべてのオブジェクトを対象に。
+        let objs = ray.intersectObjects(meshes);
+
+        // ヒエラルキーを持った子要素も対象とする場合は第二引数にtrueを指定する
+        // let objs = ray.intersectObjects(meshes, true);
+
+        if (objs.length > 0) {
+          // 一番近いオブジェクトをアニメーションに登録
+          registerMeshAnimation(meshes, objs[0].object, cyclePixels());
+        }
+      };
+
+      let animate = function () {
+        controls.update();
+        //pivot.rotation.y += Math.PI/180 * 0.5;
+        requestAnimationFrame(animate);
+        if(source.ready === false) { return;}
+        context.update(source.domElement);
+        renderer.render(scene, camera);
+        TWEEN.update(); // TweenJS をアップデートする
+      };
+
+      animate();
+    }, function (error) {
+      // imagePromises が失敗した場合
+      alert(error);
+    });
+
+  })();
+
+</script>
+</body>
+</html>
