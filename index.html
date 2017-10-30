@@ -345,47 +345,47 @@
       rootGroup.position.set(-17.9,0,-17.9);
       pivot.add(rootGroup);
 
-      let renderer = new THREE.WebGLRenderer({antialias:true});
+      let renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, });
       renderer.context.getExtension('EXT_shader_texture_lod');
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.shadowMap.enabled = true;
-      
+
       // レンダラーの HTML要素を、画面上に追加
       document.body.appendChild(renderer.domElement);
 
       ////////////ここからARキットの部分
 
       var source = new THREEx.ArToolkitSource({
-        sourceType: "webcam", 
+        sourceType: "webcam",
       });
-      source.init(function onReady() { 
-        onResize();                                         
-      });
-
-      var context = new THREEx.ArToolkitContext({           
-        debug: false,                                       
-        cameraParametersUrl: "camera_para.dat",             
-        detectionMode: "mono",                              
-        imageSmoothingEnabled: true,                        
-        maxDetectionRate: 60,                               
-        canvasWidth: source.parameters.sourceWidth,         
-        canvasHeight: source.parameters.sourceHeight,      
-      });
-      context.init(function onCompleted(){                  
-        camera.projectionMatrix.copy(context.getProjectionMatrix());   
+      source.init(function onReady() {
+        onResize();
       });
 
-      window.addEventListener("resize", function() {        
-      onResize();                                         
+      var context = new THREEx.ArToolkitContext({
+        debug: false,
+        cameraParametersUrl: "camera_para.dat",
+        detectionMode: "mono",
+        imageSmoothingEnabled: false,
+        maxDetectionRate: 60,
+        canvasWidth: source.parameters.sourceWidth,
+        canvasHeight: source.parameters.sourceHeight,
+      });
+      context.init(function onCompleted(){
+        camera.projectionMatrix.copy(context.getProjectionMatrix());
+      });
+
+      window.addEventListener("resize", function() {
+      onResize();
       });
 
       function onResize(){
-      source.onResizeElement();                           
-      source.copyElementSizeTo(renderer.domElement);      
-      if(context.arController !== null){                  
-        source.copyElementSizeTo(context.arController.canvas);  
-        } 
+      source.onResizeElement();
+      source.copyElementSizeTo(renderer.domElement);
+      if(context.arController !== null){
+        source.copyElementSizeTo(context.arController.canvas);
+        }
       }
 
 　　　//////////////ここまでARキットの部分
@@ -440,7 +440,7 @@
             side: THREE.BackSide
         });
 
-        var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1), 
+        var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1),
           skyBoxMaterial);
         //scene.add(skyMesh);
 
