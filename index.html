@@ -371,7 +371,7 @@
       pivot.add(rootGroup);
       scene.add(pivot);
 
-      let renderer = new THREE.WebGLRenderer({antialias:true, alpha:false, logarithmicDepthBuffer: false});
+      let renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, logarithmicDepthBuffer: false});
       renderer.context.getExtension('EXT_shader_texture_lod');
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -382,37 +382,37 @@
 
       ////////////ここからARキットの部分
 
-      // var source = new THREEx.ArToolkitSource({
-      //   sourceType: "webcam",
-      // });
-      // source.init(function onReady() {
-      //   onResize();
-      // });
-      //
-      // var context = new THREEx.ArToolkitContext({
-      //   debug: false,
-      //   cameraParametersUrl: "camera_para.dat",
-      //   detectionMode: "mono",
-      //   imageSmoothingEnabled: false,
-      //   maxDetectionRate: 60,
-      //   canvasWidth: source.parameters.sourceWidth,
-      //   canvasHeight: source.parameters.sourceHeight,
-      // });
-      // context.init(function onCompleted(){
-      //   camera.projectionMatrix.copy(context.getProjectionMatrix());
-      // });
-      //
-      // window.addEventListener("resize", function() {
-      // onResize();
-      // });
-      //
-      // function onResize(){
-      // source.onResizeElement();
-      // source.copyElementSizeTo(renderer.domElement);
-      // if(context.arController !== null){
-      //   source.copyElementSizeTo(context.arController.canvas);
-      //   }
-      // }
+      var source = new THREEx.ArToolkitSource({
+        sourceType: "webcam",
+      });
+      source.init(function onReady() {
+        //onResize();
+      });
+
+      var context = new THREEx.ArToolkitContext({
+        debug: false,
+        cameraParametersUrl: "camera_para.dat",
+        detectionMode: "mono",
+        imageSmoothingEnabled: false,
+        maxDetectionRate: 60,
+        canvasWidth: source.parameters.sourceWidth,
+        canvasHeight: source.parameters.sourceHeight,
+      });
+      context.init(function onCompleted(){
+        //camera.projectionMatrix.copy(context.getProjectionMatrix());
+      });
+
+      window.addEventListener("resize", function() {
+      onResize();
+      });
+
+      function onResize(){
+      source.onResizeElement();
+      source.copyElementSizeTo(renderer.domElement);
+      if(context.arController !== null){
+        source.copyElementSizeTo(context.arController.canvas);
+        }
+      }
 
 　　　//////////////ここまでARキットの部分
 
@@ -476,7 +476,7 @@
 
         var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1),
           skyBoxMaterial);
-        scene.add(skyMesh);
+        //scene.add(skyMesh);
 
 
       var raycaster = new THREE.Raycaster();
@@ -513,8 +513,8 @@
         controls.update();
         //pivot.rotation.y += Math.PI/180 * 0.5;
         requestAnimationFrame(animate);
-        // if(source.ready === false) { return;}
-        // context.update(source.domElement);
+         if(source.ready === false) { return;}
+         context.update(source.domElement);
         renderer.render(scene, camera);
         TWEEN.update(); // TweenJS をアップデートする
       };
