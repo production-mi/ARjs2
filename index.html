@@ -446,36 +446,36 @@
           return Math.log2(Math.max(width,height));
         }
 
-        let cubeLoader = new THREE.CubeTextureLoader();
-        let cubeMap = cubeLoader.load( envimgPaths, function(loadedCubeMap){
-              loadedCubeMap.generateMipmaps = true;
-              loadedCubeMap.needsUpdate = true;
-              customShader.uniforms.MaxLodLevel.value = maxLodLevel(loadedCubeMap.image[0].width, loadedCubeMap.image[0].height);
-            customShader.uniforms.CubeMap.value = loadedCubeMap;
-         });
+        // let cubeLoader = new THREE.CubeTextureLoader();
+        // let cubeMap = cubeLoader.load( envimgPaths, function(loadedCubeMap){
+        //       loadedCubeMap.generateMipmaps = true;
+        //       loadedCubeMap.needsUpdate = true;
+        //       customShader.uniforms.MaxLodLevel.value = maxLodLevel(loadedCubeMap.image[0].width, loadedCubeMap.image[0].height);
+        //     customShader.uniforms.CubeMap.value = loadedCubeMap;
+        //  });
 
-        var cubeShader = THREE.ShaderLib['cube'];
-        cubeShader.uniforms['tCube'].value = cubeMap;
-        cubeShader.uniforms['tFlip'].value = 1;
+        // var cubeShader = THREE.ShaderLib['cube'];
+        // cubeShader.uniforms['tCube'].value = cubeMap;
+        // cubeShader.uniforms['tFlip'].value = 1;
 
-        let testMat = new THREE.MeshLambertMaterial({
-          vertexColors:THREE.FaceColors,
-          opacity: 0.0
-        });
+        // let testMat = new THREE.MeshLambertMaterial({
+        //   vertexColors:THREE.FaceColors,
+        //   opacity: 0.0
+        // });
 
-        var skyBoxMaterial = new THREE.ShaderMaterial({
-            fragmentShader: cubeShader.fragmentShader,
-            vertexShader : cubeShader.vertexShader,
-            uniforms: cubeShader.uniforms,
-            depthWrite: false,
-            side: THREE.BackSide,
-            opacity:0.0
-        });
+        // var skyBoxMaterial = new THREE.ShaderMaterial({
+        //     fragmentShader: cubeShader.fragmentShader,
+        //     vertexShader : cubeShader.vertexShader,
+        //     uniforms: cubeShader.uniforms,
+        //     depthWrite: false,
+        //     side: THREE.BackSide,
+        //     opacity:0.0
+        // });
 
 
 
-        var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1),
-          skyBoxMaterial);
+        // var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1),
+        //   skyBoxMaterial);
         //scene.add(skyMesh);
 
 
