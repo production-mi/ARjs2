@@ -367,7 +367,7 @@
       pivot.add(rootGroup);
       scene.add(pivot);
 
-      let renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, logarithmicDepthBuffer: true});
+      let renderer = new THREE.WebGLRenderer({antialias:true, alpha:false, logarithmicDepthBuffer: true});
       renderer.context.getExtension('EXT_shader_texture_lod');
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
