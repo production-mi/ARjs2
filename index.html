@@ -326,8 +326,8 @@
 
           mesh.castShadow = true;
           mesh.castShadow = true;
-          rootGroup.add(mesh);
-          meshes.push(mesh);
+          //rootGroup.add(mesh);
+          //meshes.push(mesh);
 
 
         }
@@ -343,11 +343,11 @@
       ground.castShadow = false;
       ground.receiveShadow = true;
 
-      // let TestMesh = new THREE.CubeGeometry(10, 10, 10);
-      // let TestMaterial = new THREE.MeshLambertMaterial({
-      //   vertexColors:{r:0.5, g:0.5, b:0.5},
-      // });
-      // let TestCube = new THREE.Mesh(TestMesh, TestMaterial);
+      let TestMesh = new THREE.CubeGeometry(10, 10, 10);
+      let TestMaterial = new THREE.MeshLambertMaterial({
+        vertexColors:{r:0.5, g:0.5, b:0.5},
+      });
+      let TestCube = new THREE.Mesh(TestMesh, TestMaterial);
       //
       // let TestMesh2 = new THREE.CubeGeometry(10, 10, 10);
       // let TestMaterial2 = new THREE.MeshLambertMaterial({
@@ -419,7 +419,7 @@
         patternUrl: "Marker.patt",
       });
       scene.add(marker1);
-      marker1.add(pivot);
+      marker1.add(TestCube;
 
 　　　//////////////ここまでARキットの部分
 
