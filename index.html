@@ -7,9 +7,10 @@
         body {
             margin: 0;
         }
+
         canvas {
-          width: 100%;
-          height: 100%
+            width: 100%;
+            height: 100%
         }
     </style>
 </head>
@@ -27,6 +28,7 @@
         wPosition = modelMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
     }
+
 </script>
 <script id="fs" type="fshader">
     #extension GL_EXT_shader_texture_lod : enable
@@ -49,47 +51,48 @@
         // IBL
         vec3 diffuse = textureCubeLodEXT(CubeMap, N, MaxLodLevel).xyz;
         vec3 specular = textureCubeLodEXT(CubeMap, R, log2(Roughness*pow(2.0, MaxLodLevel))).xyz;
-        // フレネル
+        // Fresnel
         vec3 F0 = mix(vec3(0.1), BaseColor, Metallic);
         vec3 fresnel = schlick(F0, max(0.0, dot(N,V)));
         vec3 color = BaseColor * (1.0 - Metallic) * diffuse * (1.0 - fresnel) + specular * fresnel;
         gl_FragColor = vec4(color,1.0);
     }
+
 </script>
 <script>
-  (function(){
+  (function () {
     const MAX_ANIMATION_MS = 1500; // millisecond
 
-    // ピクセル（キューブ）数
-    const WIDTH = 30;
-    const HEIGHT = 30;
+    // Number of cube
+    const WIDTH = 50;
+    const HEIGHT = 50;
 
-    // キューブの大きさ
-    const CUBE_WIDTH = 0.5;
-    const CUBE_HEIGHT = 0.5;
-    const CUBE_DEPTH = 0.5;
+    // Size of each cube
+    const CUBE_WIDTH = 0.1;
+    const CUBE_HEIGHT = 0.1;
+    const CUBE_DEPTH = 0.1;
 
-    /** @const キューブの離れ具合 */
-    const CUBE_INTERVAL = 0.6;
+    /** @const  //distance between each cube  */
+    const CUBE_INTERVAL = 0.12;
 
-    /** @const キューブ同士の一番遠い距離 */
+    /** @const //The Max dictance to the cube */
     const MAX_DISTANCE = calcDistance3d(
       {x: 0, y: 0, z: 0},
       {x: CUBE_INTERVAL * (WIDTH - 1) + CUBE_DEPTH, y: CUBE_INTERVAL * (HEIGHT - 1) + CUBE_WIDTH, z: 0}
     );
 
     let envimgPaths = [
-        "Cubemaps/face_r.png",
-        "Cubemaps/face_l.png",
-        "Cubemaps/face_t.png",
-        "Cubemaps/face_d.png",
-        "Cubemaps/face_f.png",
-        "Cubemaps/face_b.png"
+      "Cubemaps/face_r.png",
+      "Cubemaps/face_l.png",
+      "Cubemaps/face_t.png",
+      "Cubemaps/face_d.png",
+      "Cubemaps/face_f.png",
+      "Cubemaps/face_b.png"
     ];
 
 
     /**
-     * 3D空間における二点間の距離を求めます
+     * Calculate the dictance between 2 ponits in 3D space
      *
      * @param a position
      * @param b position
@@ -102,6 +105,7 @@
         + Math.pow(a.z - b.z, 2)
       );
     }
+
     // ----- /calcDistance
 
     /**
@@ -121,10 +125,11 @@
         return current;
       });
     }
+
     // ----- /generateCycle
 
     /**
-     * 画像ファイルへのパスから、指定されたサイズのピクセル情報を返します。
+     * Return user defined pixel infomation from image files path
      *
      * @param path
      * @param destWidth
@@ -132,18 +137,18 @@
      * @returns {Promise}
      */
     function getImagePixelColorsPromise(path, destWidth, destHeight) {
-      // プロミスを返す
+      // return the promise
       // https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Promise
       return new Promise(function (resolve, reject) {
         let img = new Image();
 
         img.onerror = function () {
-          // エラーが起きたら
-          reject('画像の読み込みに失敗しました: ' + path);
+          // If it's error
+          reject('Failed to load image: ' + path);
         };
 
         img.onload = function () {
-          // 画像の読み込みが完了したら
+          // If it's successed
           let pixels = [];
           let canvas = document.createElement('canvas');
           let ctx = canvas.getContext('2d');
@@ -151,7 +156,8 @@
           canvas.width = destWidth;
           canvas.height = destHeight;
 
-          // img を destWidth, destHeight に縮小して描画
+          // Set the width and height of "img" to ""
+          //img を destWidth, destHeight に縮小して描画
           ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, destWidth, destHeight);
 
           let data = ctx.getImageData(0, 0, destWidth, destWidth).data;
@@ -170,6 +176,7 @@
         img.src = path; // 画像を読み込む
       });
     }
+
     // ----- /getImagePixelColorsPromise
 
     /**
@@ -183,7 +190,7 @@
     function registerMeshAnimation(meshes, targetMesh, pixels) {
       let durationEasingFunc = TWEEN.Easing.Circular.Out;
 
-      meshes.forEach(function(mesh, index) {
+      meshes.forEach(function (mesh, index) {
         // それぞれのメッシュについて計算してアニメーションを登録する
 
         // 2点間の距離を求める
@@ -196,6 +203,7 @@
         meshAnimate(mesh, easingRate * MAX_ANIMATION_MS, pixels[index]);
       });
     }
+
     // ----- /registerMeshAnimation
 
     /**
@@ -215,19 +223,19 @@
 
       let positionTween = new TWEEN.Tween(mesh.position)
         .delay(delay)
-        .to({y: 2}, 300, TWEEN.Easing.Back.In);
+        .to({y: 0.3}, 300, TWEEN.Easing.Back.In);
 
       let positionTween2 = new TWEEN.Tween(mesh.position)
-        .to({y: -1}, 300, TWEEN.Easing.Circular.InOut);
+        .to({y: -0.3}, 300, TWEEN.Easing.Circular.InOut);
 
       let rotationTween = new TWEEN.Tween(mesh.rotation)
         .delay(delay)
-        .to({x: Math.PI/180*180}, 300, TWEEN.Easing.Circular.In);
+        .to({x: Math.PI / 180 * 180}, 300, TWEEN.Easing.Circular.In);
 
       let rotationTween2 = new TWEEN.Tween(mesh.rotation)
-        // .delay(delay)
-        .to({x: Math.PI/180*360}, 300, TWEEN.Easing.Circular.InOut)
-        .onComplete(function() {
+      // .delay(delay)
+        .to({x: Math.PI / 180 * 360}, 300, TWEEN.Easing.Circular.InOut)
+        .onComplete(function () {
           mesh.rotation.x = 0;
         });
 
@@ -243,18 +251,19 @@
       rotationTween.start();
       colorTween.start();
     }
+
     // ----- /meshAnimate
 
     // --------------------------------------------------------------------------------------
     // ここ以下がメインの処理
     // --------------------------------------------------------------------------------------
 
-    let imagePaths = ['img/image1.jpg', 'img/image2.png', 'img/image3.png', 'img/image4.png'];
-    let imagePromises = imagePaths.map(function (imagePath){
+    let imagePaths = ['img/image1.png', 'img/image2.png', 'img/image3.png', 'img/image4.png', 'img/image5.png', 'img/image6.png'];
+    let imagePromises = imagePaths.map(function (imagePath) {
       return getImagePixelColorsPromise(imagePath, WIDTH, HEIGHT);
     });
 
-    Promise.all(imagePromises).then(function(images) {
+    Promise.all(imagePromises).then(function (images) {
       // imagePromises が成功した場合
 
       console.log(images); // imagePaths 分のピクセル配列が返って来る
@@ -277,7 +286,7 @@
 
       // Setting light
       let SpotLight = new THREE.SpotLight(0xffffff, 0.5);
-      SpotLight.position.set( 20, 100, 20 );
+      SpotLight.position.set(20, 100, 20);
       SpotLight.castShadow = false;
 
       SpotLight.shadow.mapSize.width = 2048;
@@ -288,7 +297,7 @@
 
       scene.add(SpotLight);
 
-      var AmbientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+      var AmbientLight = new THREE.AmbientLight(0x404040); // soft white light
       scene.add(AmbientLight);
 
       let light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
@@ -308,7 +317,7 @@
         for (let x = 0; x < HEIGHT; x++) {
           let index = z * WIDTH + x;
           let mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-            vertexColors:THREE.FaceColors,
+            vertexColors: THREE.FaceColors,
             //roughness:0.8,
             //metalness:0.1
             // map:texture,
@@ -334,18 +343,18 @@
       }
       let groundMesh = new THREE.CubeGeometry(100, 0.1, 100);
       let groundMaterial = new THREE.MeshLambertMaterial({
-        vertexColors:{r:0.5, g:0.5, b:0.5},
+        vertexColors: {r: 0.5, g: 0.5, b: 0.5},
       });
       groundMaterial.transparent = true;
       groundMaterial.blending = THREE["MultiplyBlending"];
       let ground = new THREE.Mesh(groundMesh, groundMaterial);
-      ground.position.set(0,-10,0);
+      ground.position.set(0, -10, 0);
       ground.castShadow = false;
       ground.receiveShadow = true;
 
       let TestMesh = new THREE.CubeGeometry(2, 2, 2);
       let TestMaterial = new THREE.MeshLambertMaterial({
-        vertexColors:{r:0.5, g:0.5, b:0.5},
+        vertexColors: {r: 0.5, g: 0.5, b: 0.5},
       });
       let TestCube = new THREE.Mesh(TestMesh, TestMaterial);
 
@@ -364,14 +373,12 @@
       // //scene.add(TestCube2);
 
 
-
-
       //scene.add(ground);
-      rootGroup.position.set(0,0,0);
+      rootGroup.position.set(-2.5, 0, -2.5);
       //rootGroup.position.set(-170.9,0,-170.9);
       pivot.add(rootGroup);
 
-      let renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, logarithmicDepthBuffer: false});
+      let renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, logarithmicDepthBuffer: false});
       renderer.context.getExtension('EXT_shader_texture_lod');
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -398,20 +405,24 @@
         canvasWidth: source.parameters.sourceWidth,
         canvasHeight: source.parameters.sourceHeight,
       });
+<<<<<<< HEAD
       context.init(function onCompleted(){
         ///ここを有効にするとニラニラする
+=======
+      context.init(function onCompleted() {
+>>>>>>> origin/master
         //camera.projectionMatrix.copy(context.getProjectionMatrix());
       });
 
-      window.addEventListener("resize", function() {
-      onResize();
+      window.addEventListener("resize", function () {
+        onResize();
       });
 
-      function onResize(){
-      source.onResizeElement();
-      source.copyElementSizeTo(renderer.domElement);
-      if(context.arController !== null){
-        source.copyElementSizeTo(context.arController.canvas);
+      function onResize() {
+        source.onResizeElement();
+        source.copyElementSizeTo(renderer.domElement);
+        if (context.arController !== null) {
+          source.copyElementSizeTo(context.arController.canvas);
         }
       }
 
@@ -424,69 +435,69 @@
       //pivot.add(TestCube);
       marker1.add(pivot);
 
-　　　//////////////ここまでARキットの部分
+      //////////////ここまでARキットの部分
 
       var customShader = new THREE.ShaderMaterial({
-            fragmentShader: document.getElementById('fs').innerHTML,
-            vertexShader  : document.getElementById('vs').innerHTML,
-            uniforms: {
-                Roughness: {
-                    type: 'fv1',
-                    value: 0.0,
-                },
-                Metallic: {
-                    type: 'fv1',
-                    value: 0.0,
-                },
-                BaseColor: {
-                    type: 'v3',
-                    value: null,
-                },
-                MaxLodLevel: {
-                    type: 'fv1',
-                    value: 0.0,
-                },
-                CubeMap: {
-                    type: 'tc',
-                    value: null,
-                },
-            },
-        });
-        function maxLodLevel(width, height) {
-          return Math.log2(Math.max(width,height));
-        }
+        fragmentShader: document.getElementById('fs').innerHTML,
+        vertexShader: document.getElementById('vs').innerHTML,
+        uniforms: {
+          Roughness: {
+            type: 'fv1',
+            value: 0.0,
+          },
+          Metallic: {
+            type: 'fv1',
+            value: 0.0,
+          },
+          BaseColor: {
+            type: 'v3',
+            value: null,
+          },
+          MaxLodLevel: {
+            type: 'fv1',
+            value: 0.0,
+          },
+          CubeMap: {
+            type: 'tc',
+            value: null,
+          },
+        },
+      });
 
-        // let cubeLoader = new THREE.CubeTextureLoader();
-        // let cubeMap = cubeLoader.load( envimgPaths, function(loadedCubeMap){
-        //       loadedCubeMap.generateMipmaps = true;
-        //       loadedCubeMap.needsUpdate = true;
-        //       customShader.uniforms.MaxLodLevel.value = maxLodLevel(loadedCubeMap.image[0].width, loadedCubeMap.image[0].height);
-        //     customShader.uniforms.CubeMap.value = loadedCubeMap;
-        //  });
+      function maxLodLevel(width, height) {
+        return Math.log2(Math.max(width, height));
+      }
 
-        // var cubeShader = THREE.ShaderLib['cube'];
-        // cubeShader.uniforms['tCube'].value = cubeMap;
-        // cubeShader.uniforms['tFlip'].value = 1;
+      // let cubeLoader = new THREE.CubeTextureLoader();
+      // let cubeMap = cubeLoader.load( envimgPaths, function(loadedCubeMap){
+      //       loadedCubeMap.generateMipmaps = true;
+      //       loadedCubeMap.needsUpdate = true;
+      //       customShader.uniforms.MaxLodLevel.value = maxLodLevel(loadedCubeMap.image[0].width, loadedCubeMap.image[0].height);
+      //     customShader.uniforms.CubeMap.value = loadedCubeMap;
+      //  });
 
-        // let testMat = new THREE.MeshLambertMaterial({
-        //   vertexColors:THREE.FaceColors,
-        //   opacity: 0.0
-        // });
+      // var cubeShader = THREE.ShaderLib['cube'];
+      // cubeShader.uniforms['tCube'].value = cubeMap;
+      // cubeShader.uniforms['tFlip'].value = 1;
 
-        // var skyBoxMaterial = new THREE.ShaderMaterial({
-        //     fragmentShader: cubeShader.fragmentShader,
-        //     vertexShader : cubeShader.vertexShader,
-        //     uniforms: cubeShader.uniforms,
-        //     depthWrite: false,
-        //     side: THREE.BackSide,
-        //     opacity:0.0
-        // });
+      // let testMat = new THREE.MeshLambertMaterial({
+      //   vertexColors:THREE.FaceColors,
+      //   opacity: 0.0
+      // });
+
+      // var skyBoxMaterial = new THREE.ShaderMaterial({
+      //     fragmentShader: cubeShader.fragmentShader,
+      //     vertexShader : cubeShader.vertexShader,
+      //     uniforms: cubeShader.uniforms,
+      //     depthWrite: false,
+      //     side: THREE.BackSide,
+      //     opacity:0.0
+      // });
 
 
-
-        // var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1),
-        //   skyBoxMaterial);
-        //scene.add(skyMesh);
+      // var skyMesh = new THREE.Mesh(new THREE.BoxGeometry(400,400,400,1,1,1),
+      //   skyBoxMaterial);
+      //scene.add(skyMesh);
 
 
       var raycaster = new THREE.Raycaster();
@@ -523,8 +534,10 @@
         controls.update();
         //pivot.rotation.y += Math.PI/180 * 0.5;
         requestAnimationFrame(animate);
-         if(source.ready === false) { return;}
-         context.update(source.domElement);
+        if (source.ready === false) {
+          return;
+        }
+        context.update(source.domElement);
         renderer.render(scene, camera);
         TWEEN.update(); // TweenJS をアップデートする
       };
