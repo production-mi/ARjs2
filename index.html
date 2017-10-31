@@ -73,7 +73,7 @@
     const CUBE_DEPTH = 0.05;
 
     /** @const  //distance between each cube  */
-    const CUBE_INTERVAL = 0.062;
+    const CUBE_INTERVAL = 0.065;
 
     /** @const //The Max dictance to the cube */
     const MAX_DISTANCE = calcDistance3d(
@@ -219,14 +219,14 @@
         .to({x: 0.5, y: 0.5, z: 0.5}, 300, TWEEN.Easing.Back.In);
 
       let scaleTween2 = new TWEEN.Tween(mesh.scale)
-        .to({x: 1, y: 1, z: 1}, 300, TWEEN.Easing.Circular.InOut);
+        .to({x: 1.2, y: 1.2, z: 1.2}, 300, TWEEN.Easing.Circular.InOut);
 
       let positionTween = new TWEEN.Tween(mesh.position)
         .delay(delay)
-        .to({y: 0.3}, 300, TWEEN.Easing.Back.In);
+        .to({y: 0.1}, 300, TWEEN.Easing.Back.In);
 
       let positionTween2 = new TWEEN.Tween(mesh.position)
-        .to({y: -0.3}, 300, TWEEN.Easing.Circular.InOut);
+        .to({y: -0.1}, 300, TWEEN.Easing.Circular.InOut);
 
       let rotationTween = new TWEEN.Tween(mesh.rotation)
         .delay(delay)
@@ -374,7 +374,7 @@
 
 
       //scene.add(ground);
-      rootGroup.position.set(-0.7, 0, -0.8);
+      rootGroup.position.set(0.75, 0, -0.75);
       //rootGroup.position.set(-170.9,0,-170.9);
       pivot.add(rootGroup);
 
