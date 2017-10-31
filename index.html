@@ -64,8 +64,8 @@
     const MAX_ANIMATION_MS = 1500; // millisecond
 
     // ピクセル（キューブ）数
-    const WIDTH = 30;
-    const HEIGHT = 30;
+    const WIDTH = 50;
+    const HEIGHT = 50;
 
     // キューブの大きさ
     const CUBE_WIDTH = 0.1;
@@ -222,10 +222,10 @@
 
       let positionTween = new TWEEN.Tween(mesh.position)
         .delay(delay)
-        .to({y: 2}, 300, TWEEN.Easing.Back.In);
+        .to({y: 0.3}, 300, TWEEN.Easing.Back.In);
 
       let positionTween2 = new TWEEN.Tween(mesh.position)
-        .to({y: -1}, 300, TWEEN.Easing.Circular.InOut);
+        .to({y: -0.3}, 300, TWEEN.Easing.Circular.InOut);
 
       let rotationTween = new TWEEN.Tween(mesh.rotation)
         .delay(delay)
@@ -373,7 +373,7 @@
 
 
       //scene.add(ground);
-      rootGroup.position.set(-3, 0, -3);
+      rootGroup.position.set(-2.5, 0, -);
       //rootGroup.position.set(-170.9,0,-170.9);
       pivot.add(rootGroup);
 
