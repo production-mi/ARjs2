@@ -343,11 +343,14 @@
       ground.castShadow = false;
       ground.receiveShadow = true;
 
-      let TestMesh = new THREE.CubeGeometry(10, 10, 10);
+      let TestMesh = new THREE.CubeGeometry(2, 2, 2);
       let TestMaterial = new THREE.MeshLambertMaterial({
         vertexColors:{r:0.5, g:0.5, b:0.5},
       });
       let TestCube = new THREE.Mesh(TestMesh, TestMaterial);
+      TestCube.position.x = 0;
+      TestCube.position.y = 0;
+      TestCube.position.z = 0;
       //
       // let TestMesh2 = new THREE.CubeGeometry(10, 10, 10);
       // let TestMaterial2 = new THREE.MeshLambertMaterial({
@@ -418,8 +421,8 @@
         type: "pattern",
         patternUrl: "Marker.patt",
       });
-      scene.add(marker1);
       marker1.add(TestCube);
+      scene.add(marker1);
 
 　　　//////////////ここまでARキットの部分
 
