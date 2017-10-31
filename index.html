@@ -51,7 +51,7 @@
         // IBL
         vec3 diffuse = textureCubeLodEXT(CubeMap, N, MaxLodLevel).xyz;
         vec3 specular = textureCubeLodEXT(CubeMap, R, log2(Roughness*pow(2.0, MaxLodLevel))).xyz;
-        // フレネル
+        // Fresnel
         vec3 F0 = mix(vec3(0.1), BaseColor, Metallic);
         vec3 fresnel = schlick(F0, max(0.0, dot(N,V)));
         vec3 color = BaseColor * (1.0 - Metallic) * diffuse * (1.0 - fresnel) + specular * fresnel;
@@ -63,19 +63,19 @@
   (function () {
     const MAX_ANIMATION_MS = 1500; // millisecond
 
-    // ピクセル（キューブ）数
+    // Number of cube
     const WIDTH = 50;
     const HEIGHT = 50;
 
-    // キューブの大きさ
+    // Size of each cube
     const CUBE_WIDTH = 0.1;
     const CUBE_HEIGHT = 0.1;
     const CUBE_DEPTH = 0.1;
 
-    /** @const キューブの離れ具合 */
+    /** @const  //distance between each cube  */
     const CUBE_INTERVAL = 0.12;
 
-    /** @const キューブ同士の一番遠い距離 */
+    /** @const //The Max dictance to the cube */
     const MAX_DISTANCE = calcDistance3d(
       {x: 0, y: 0, z: 0},
       {x: CUBE_INTERVAL * (WIDTH - 1) + CUBE_DEPTH, y: CUBE_INTERVAL * (HEIGHT - 1) + CUBE_WIDTH, z: 0}
@@ -92,7 +92,7 @@
 
 
     /**
-     * 3D空間における二点間の距離を求めます
+     * Calculate the dictance between 2 ponits in 3D space
      *
      * @param a position
      * @param b position
@@ -129,7 +129,7 @@
     // ----- /generateCycle
 
     /**
-     * 画像ファイルへのパスから、指定されたサイズのピクセル情報を返します。
+     * Return user defined pixel infomation from image files path
      *
      * @param path
      * @param destWidth
@@ -137,18 +137,18 @@
      * @returns {Promise}
      */
     function getImagePixelColorsPromise(path, destWidth, destHeight) {
-      // プロミスを返す
+      // return the promise
       // https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Promise
       return new Promise(function (resolve, reject) {
         let img = new Image();
 
         img.onerror = function () {
-          // エラーが起きたら
-          reject('画像の読み込みに失敗しました: ' + path);
+          // If it's error
+          reject('Failed to load image: ' + path);
         };
 
         img.onload = function () {
-          // 画像の読み込みが完了したら
+          // If it's successed
           let pixels = [];
           let canvas = document.createElement('canvas');
           let ctx = canvas.getContext('2d');
@@ -156,7 +156,8 @@
           canvas.width = destWidth;
           canvas.height = destHeight;
 
-          // img を destWidth, destHeight に縮小して描画
+          // Set the width and height of "img" to ""
+          //img を destWidth, destHeight に縮小して描画
           ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, destWidth, destHeight);
 
           let data = ctx.getImageData(0, 0, destWidth, destWidth).data;
@@ -257,7 +258,7 @@
     // ここ以下がメインの処理
     // --------------------------------------------------------------------------------------
 
-    let imagePaths = ['img/image1.jpg', 'img/image2.png', 'img/image3.png', 'img/image4.png'];
+    let imagePaths = ['img/image1.png', 'img/image2.png', 'img/image3.png', 'img/image4.png', 'img/image5.png', 'img/image6.png'];
     let imagePromises = imagePaths.map(function (imagePath) {
       return getImagePixelColorsPromise(imagePath, WIDTH, HEIGHT);
     });
