@@ -65,12 +65,12 @@
     const HEIGHT = 30;
 
     // キューブの大きさ
-    const CUBE_WIDTH = 10;
-    const CUBE_HEIGHT = 10;
-    const CUBE_DEPTH = 10;
+    const CUBE_WIDTH = 3;
+    const CUBE_HEIGHT = 3;
+    const CUBE_DEPTH = 3;
 
     /** @const キューブの離れ具合 */
-    const CUBE_INTERVAL = 12;
+    const CUBE_INTERVAL = 4;
 
     /** @const キューブ同士の一番遠い距離 */
     const MAX_DISTANCE = calcDistance3d(
@@ -367,7 +367,7 @@
 
       scene.add(ground);
       rootGroup.position.set(0,0,0);
-      rootGroup.position.set(-170.9,0,-170.9);
+      //rootGroup.position.set(-170.9,0,-170.9);
       pivot.add(rootGroup);
 
       let renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, logarithmicDepthBuffer: false});
