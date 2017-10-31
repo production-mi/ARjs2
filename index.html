@@ -369,7 +369,6 @@
       rootGroup.position.set(0,0,0);
       rootGroup.position.set(-17.9,0,-17.9);
       pivot.add(rootGroup);
-      scene.add(pivot);
 
       let renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, logarithmicDepthBuffer: false});
       renderer.context.getExtension('EXT_shader_texture_lod');
@@ -420,6 +419,7 @@
         patternUrl: "Marker.patt",
       });
       scene.add(marker1);
+      marker1.add(pivot);
 
 　　　//////////////ここまでARキットの部分
 
