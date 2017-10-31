@@ -273,7 +273,7 @@
       camera.position.y = 100;
       camera.position.z = 90;
 
-      let controls = new THREE.OrbitControls(camera);
+      //let controls = new THREE.OrbitControls(camera);
 
       // Setting light
       let SpotLight = new THREE.SpotLight(0xffffff, 0.5);
@@ -517,7 +517,7 @@
       };
 
       let animate = function () {
-        controls.update();
+        //controls.update();
         //pivot.rotation.y += Math.PI/180 * 0.5;
         requestAnimationFrame(animate);
          if(source.ready === false) { return;}
