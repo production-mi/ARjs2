@@ -286,8 +286,8 @@
 
       // Setting light
       let SpotLight = new THREE.SpotLight(0xffffff, 0.2);
-      SpotLight.position.set(20, 100, 20);
-      SpotLight.castShadow = false;
+      SpotLight.position.set(20, 100, 80);
+      SpotLight.castShadow = true;
 
       SpotLight.shadow.mapSize.width = 2048;
       SpotLight.shadow.mapSize.height = 2048;
@@ -341,22 +341,24 @@
 
         }
       }
-      let groundMesh = new THREE.CubeGeometry(100, 0.1, 100);
+      let groundMesh = new THREE.CubeGeometry(7, 0.1, 7);
       let groundMaterial = new THREE.MeshLambertMaterial({
-        vertexColors: {r: 0.5, g: 0.5, b: 0.5},
+        vertexColors: {r: 0, g: 0, b: 0},
+        opacity : 0.5,
+        side: THREE.DoubleSide
       });
       groundMaterial.transparent = true;
       groundMaterial.blending = THREE["MultiplyBlending"];
       let ground = new THREE.Mesh(groundMesh, groundMaterial);
-      ground.position.set(0, -10, 0);
+      ground.position.set(2, -0.3, 2);
       ground.castShadow = false;
       ground.receiveShadow = true;
 
-      let TestMesh = new THREE.CubeGeometry(2, 2, 2);
-      let TestMaterial = new THREE.MeshLambertMaterial({
-        vertexColors: {r: 0.5, g: 0.5, b: 0.5},
-      });
-      let TestCube = new THREE.Mesh(TestMesh, TestMaterial);
+      // let TestMesh = new THREE.CubeGeometry(2, 2, 2);
+      // let TestMaterial = new THREE.MeshLambertMaterial({
+      //   vertexColors: {r: 0.5, g: 0.5, b: 0.5},
+      // });
+      // let TestCube = new THREE.Mesh(TestMesh, TestMaterial);
 
       //
       // let TestMesh2 = new THREE.CubeGeometry(10, 10, 10);
@@ -373,7 +375,7 @@
       // //scene.add(TestCube2);
 
 
-      //scene.add(ground);
+      rootGroup.add(ground);
       rootGroup.position.set(-2, 0, -2);
       //rootGroup.position.set(-170.9,0,-170.9);
       pivot.add(rootGroup);
