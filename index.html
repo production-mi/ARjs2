@@ -8,10 +8,10 @@
             margin: 0;
         }
 
-        canvas {
+        /*canvas {
             width: 100%;
             height: 100%
-        }
+        }*/
     </style>
 </head>
 <body>
@@ -374,7 +374,7 @@
 
 
       //scene.add(ground);
-      rootGroup.position.set(0.75, 0, -0.75);
+      rootGroup.position.set(-2, 0, -2);
       //rootGroup.position.set(-170.9,0,-170.9);
       pivot.add(rootGroup);
 
@@ -393,7 +393,7 @@
         sourceType: "webcam",
       });
       source.init(function onReady() {
-        //onResize();
+        onResize();
       });
 
       var context = new THREEx.ArToolkitContext({
@@ -406,7 +406,7 @@
         canvasHeight: source.parameters.sourceHeight,
       });
       context.init(function onCompleted() {
-        //camera.projectionMatrix.copy(context.getProjectionMatrix());
+        camera.projectionMatrix.copy(context.getProjectionMatrix());
       });
 
       window.addEventListener("resize", function () {
