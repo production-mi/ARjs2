@@ -1,0 +1,74 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,minimum-scale=1,maximum-scale=1">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        /*canvas {
+            width: 100%;
+            height: 100%
+        }*/
+    </style>
+</head>
+<body>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="ar.min.js"></script>
+<script src="Tween.js"></script>
+<script src="color-tween.js"></script>
+<script id="vs" type="vshader">
+    varying vec3 wNormal;
+    varying vec4 wPosition;
+    void main(void) {
+        wNormal = (modelMatrix * vec4(normal,0.0)).xyz;
+        wPosition = modelMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+    }
+
+</script>
+<script id="fs" type="fshader">
+    #extension GL_EXT_shader_texture_lod : enable
+    varying vec3 wNormal;
+    varying vec4 wPosition;
+    uniform float Roughness;
+    uniform float Metallic;
+    uniform vec3 BaseColor;
+    uniform float MaxLodLevel;
+    uniform samplerCube CubeMap;
+    vec3 schlick(vec3 f0, float product)
+    {
+        return f0 + (1.0 - f0) * pow((1.0 - product), 5.0);
+    }
+    void main(void)
+    {
+        vec3 N = normalize(wNormal);
+        vec3 V = normalize((vec4(cameraPosition, 1.0) - wPosition).xyz);
+        vec3 R = reflect(-V,N);
+        // IBL
+        vec3 diffuse = textureCubeLodEXT(CubeMap, N, MaxLodLevel).xyz;
+        vec3 specular = textureCubeLodEXT(CubeMap, R, log2(Roughness*pow(2.0, MaxLodLevel))).xyz;
+        // Fresnel
+        vec3 F0 = mix(vec3(0.1), BaseColor, Metallic);
+        vec3 fresnel = schlick(F0, max(0.0, dot(N,V)));
+        vec3 color = BaseColor * (1.0 - Metallic) * diffuse * (1.0 - fresnel) + specular * fresnel;
+        gl_FragColor = vec4(color,1.0);
+    }
+
+</script>
+<script>
+  (function(){function r(a,b){return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2))}function y(a){var b=0,k=a.length;return function(){var e=a[b%k];++b;return e}}function z(a,b,k){return new Promise(function(e,l){var g=new Image;g.onerror=function(){l("Failed to load image: "+a)};g.onload=function(){var a=[],d=document.createElement("canvas"),c=d.getContext("2d");d.width=b;d.height=k;c.drawImage(g,0,0,g.naturalWidth,g.naturalHeight,0,0,b,k);d=c.getImageData(0,0,b,b).data;for(c=
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                0;c<d.length;c+=4)a.push({r:d[c]/255,g:d[c+1]/255,b:d[c+2]/255,a:d[c+3]/255});e(a)};g.src=a})}function A(a,b,k){var e=TWEEN.Easing.Circular.Out;a.forEach(function(a,g){var f=r(b.position,a.position);f=e(f/B);C(a,1500*f,k[g])})}function C(a,b,k){var e=(new TWEEN.Tween(a.scale)).delay(b).to({x:.5,y:.5,z:.5},300,TWEEN.Easing.Back.In),l=(new TWEEN.Tween(a.scale)).to({x:1.2,y:1.2,z:1.2},300,TWEEN.Easing.Circular.InOut),g=(new TWEEN.Tween(a.position)).delay(b).to({y:.1},300,TWEEN.Easing.Back.In),f=(new TWEEN.Tween(a.position)).to({y:-.1},
+  300,TWEEN.Easing.Circular.InOut),d=(new TWEEN.Tween(a.rotation)).delay(b).to({x:Math.PI/180*180},300,TWEEN.Easing.Circular.In),c=(new TWEEN.Tween(a.rotation)).to({x:Math.PI/180*360},300,TWEEN.Easing.Circular.InOut).onComplete(function(){a.rotation.x=0});b=(new TWEEN.Tween(a.material.color)).delay(b).to(k,300,TWEEN.Easing.Linear.None);e.chain(l);g.chain(f);d.chain(c);e.start();g.start();d.start();b.start()}var B=r({x:0,y:0,z:0},{x:3.48,y:3.48,z:0}),D="img/image1.png img/image2.gif img/image3.png img/image4.jpg img/image5.png img/image6.png".split(" ").map(function(a){return z(a,
+  50,50)});Promise.all(D).then(function(a){function b(){m.onResizeElement();m.copyElementSizeTo(n.domElement);null!==q.arController&&m.copyElementSizeTo(q.arController.canvas)}console.log(a);var k=y(a),e=new THREE.Scene,l=new THREE.PerspectiveCamera(35,window.innerWidth/window.innerHeight,1,1E3),g=new THREE.OrbitControls(l);a=new THREE.SpotLight(16777215,.2);a.position.set(20,100,80);a.castShadow=!0;a.shadow.mapSize.width=2048;a.shadow.mapSize.height=2048;a.shadow.camera.near=.5;a.shadow.camera.far=
+  4E3;a.shadow.camera.fov=30;e.add(a);a=new THREE.AmbientLight(4210752);e.add(a);a=new THREE.HemisphereLight(16777147,526368,.9);e.add(a);var f=new THREE.CubeGeometry(.05,.05,.05),d=[],c=new THREE.Group;a=new THREE.Group;for(var p=k(),t=0;50>t;t++)for(var u=0;50>u;u++){var v=50*t+u,h=new THREE.Mesh(f,new THREE.MeshStandardMaterial({vertexColors:THREE.FaceColors,roughness:.8,metalness:.1}));h.position.x+=.07*u;h.position.y=0;h.position.z+=.07*t;h.material.color.r=p[v].r;h.material.color.g=p[v].g;h.material.color.b=
+  p[v].b;h.material.color.a=p[v].a;h.castShadow=!0;h.castShadow=!0;c.add(h);d.push(h)}f=new THREE.CubeGeometry(7,.1,7);p=new THREE.MeshLambertMaterial({vertexColors:{r:0,g:0,b:0},opacity:.5,side:THREE.DoubleSide});p.transparent=!0;p.blending=THREE.MultiplyBlending;f=new THREE.Mesh(f,p);f.position.set(2,-.3,2);f.castShadow=!1;f.receiveShadow=!0;c.add(f);c.position.set(-2,0,-2);a.add(c);var n=new THREE.WebGLRenderer({antialias:!0,alpha:!0,logarithmicDepthBuffer:!1});n.context.getExtension("EXT_shader_texture_lod");
+  n.setSize(window.innerWidth,window.innerHeight);n.shadowMap.type=THREE.PCFSoftShadowMap;n.shadowMap.enabled=!0;document.body.appendChild(n.domElement);var m=new THREEx.ArToolkitSource({sourceType:"webcam"});m.init(function(){b()});var q=new THREEx.ArToolkitContext({debug:!1,cameraParametersUrl:"camera_para.dat",detectionMode:"mono",imageSmoothingEnabled:!1,maxDetectionRate:60,canvasWidth:m.parameters.sourceWidth,canvasHeight:m.parameters.sourceHeight});q.init(function(){l.projectionMatrix.copy(q.getProjectionMatrix())});
+  window.addEventListener("resize",function(){b()});c=new THREE.Group;new THREEx.ArMarkerControls(q,c,{type:"pattern",patternUrl:"Marker.patt"});e.add(c);c.add(a);new THREE.ShaderMaterial({fragmentShader:document.getElementById("fs").innerHTML,vertexShader:document.getElementById("vs").innerHTML,uniforms:{Roughness:{type:"fv1",value:0},Metallic:{type:"fv1",value:0},BaseColor:{type:"v3",value:null},MaxLodLevel:{type:"fv1",value:0},CubeMap:{type:"tc",value:null}}});var r=new THREE.Raycaster,w=new THREE.Vector2;
+  window.onmousedown=window.ontouchstart=function(a){a.target===n.domElement&&(a.preventDefault(),w.x=(a.clientX||a.touches[0].clientX)/window.innerWidth*2-1,w.y=2*-((a.clientY||a.touches[0].clientY)/window.innerHeight)+1,r.setFromCamera(w,l),a=r.intersectObjects(d),0<a.length&&A(d,a[0].object,k()))};var x=function(){g.update();requestAnimationFrame(x);!1!==m.ready&&(q.update(m.domElement),n.render(e,l),TWEEN.update())};x()},function(a){alert(a)})})();
+</script>
+</body>
+</html>
